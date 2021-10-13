@@ -4,6 +4,8 @@ class Planet {
   ArrayList<Vertex> vertices;
   ArrayList<ArrayList<ArrayList<Vertex>>> vertexMap;
   
+  PVector centroid;
+  
   Planet(float radius, int vertexCount) {
     vertices = new ArrayList<Vertex>();
     
@@ -16,6 +18,8 @@ class Planet {
       vertices.add(vertex);
       addVertexToMap(vertex);
     }
+    
+    centroid = new PVector(0, 0);
   }
   
   void printVertexMap() {
@@ -56,6 +60,8 @@ class Planet {
     vertices.remove(vertex.i);
     for(int i = vertex.i; i < vertices.size(); i++)
       vertices.get(i).decreaseI(1);
+      
+    vertex.removed = true;
   }
   
   // Moves a vertex's position, moving it in vertexMap if needed
@@ -105,19 +111,22 @@ class Planet {
         Vertex nextV = vertices.get((i + 1) % vertices.size());
         if(checkAddVs(prevV, vertex))
           i++;
-        checkAddVs(vertex, nextV);
+        if(checkAddVs(vertex, nextV))
+          i++;
           
         movedVertices.add(vertex);
       }
     }
     
     // Remove vertices
-    for(Vertex movedVertex : movedVertices)
-      checkRemoveVs(movedVertex);
+    for(Vertex movedVertex : movedVertices) {
+      if(!movedVertex.removed)
+        checkRemoveVs(movedVertex);
+    }
   }
   
   // Adds new vertices if the space in between current ones has grown past a certain distance 
-  boolean checkAddVs(Vertex v1, Vertex v2) {    
+  boolean checkAddVs(Vertex v1, Vertex v2) {
     if(sqDist(v1, v2) > maxDist * maxDist) {
       PVector newVPos = v1.getVector().add(v2.getVector().sub(v1.getVector()).div(2));
       Vertex newV = new Vertex(v2.i, newVPos.x, newVPos.y);
@@ -160,18 +169,25 @@ class Planet {
       if(highI - lowI < vertices.size() - highI + lowI) {
         for(int i = highI; i > lowI; i--) { // Inefficient as increments all vertices infront by one many times (and below)
           removeVertex(vertices.get(i));
+          //println("removed " + i);
         }
       } else {
         for(int i = vertices.size() - 1; i > highI; i--) {
           removeVertex(vertices.get(i));
+          //println("removed " + i);
         }
         for(int i = lowI - 1; i >= 0; i--) {
           removeVertex(vertices.get(i));
+          //println("removed " + i);
         }
       }
       return true;
     }
     return false;
+  }
+  
+  float getSignedArea() {
+    return 0;
   }
   
   void display() {
@@ -191,6 +207,4 @@ class Planet {
   float sqDist(Vertex a, Vertex b) {
     return (a.x - b.x)*(a.x - b.x) + (a.y - b.y)*(a.y - b.y); 
   }
-  
-  
 }

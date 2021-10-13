@@ -2,11 +2,13 @@ class Vertex {
   int i;
   float x;
   float y;
+  boolean removed;
   
   Vertex(int i, float x, float y) {
     this.i = i;
     this.x = x;
     this.y = y;
+    this.removed = false;
   }
   
   void increaseI(int a) {

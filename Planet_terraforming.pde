@@ -1,5 +1,5 @@
 float minDist = 10;
-float maxDist = 25;
+float maxDist = 20;
 float digAmount = 25;
 
 boolean showVertices = true;
