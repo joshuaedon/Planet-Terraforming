@@ -4,8 +4,8 @@ float digAmount = 25;
 
 boolean showVertices = true;
 
-int vertexCount = 20;
-int radius = 100;
+int vertexCount = 40;
+int radius = 200;
 
 Planet p;
 
@@ -14,6 +14,7 @@ boolean dig = true;
 
 void setup() {
   size(750, 750);
+  surface.setResizable(true);
   
   p = new Planet(radius, vertexCount);
 }
@@ -22,7 +23,7 @@ void draw() {
   if(mouseDown) {
     p.dig(new PVector(mouseX - width / 2, mouseY - height / 2), digAmount);
   }
-  p.round(0, 1);
+  p.round(0, 0.1);
   
   background(0);
   p.display();

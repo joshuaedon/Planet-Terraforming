@@ -231,9 +231,9 @@ class Planet {
       
       float prevDist = dists[(i > 0) ? i - 1 : vertices.size() - 1].mag();
       float nextDist = dists[(i + 1) % vertices.size()].mag();
-      float diff = -((prevDist + nextDist) / 2 - dists[i].mag());
+      float diff = dists[i].mag() - (prevDist + nextDist) / 2;
       
-      if(diff > threshold) {
+      if(abs(diff) > threshold) {
         PVector displacement = dists[i].copy().setMag(diff * amount);
         moveVertex(vertex, displacement);
         
@@ -254,7 +254,7 @@ class Planet {
         checkRemoveVs(movedVertex);
     }
     
-    //setCoM();
+    setCoM();
   }
   
   void display() {
