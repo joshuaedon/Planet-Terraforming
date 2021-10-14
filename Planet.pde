@@ -20,6 +20,7 @@ class Planet {
     }
     
     setCoM();
+    setNormals();
   }
   
   void printVertexMap() {
@@ -125,6 +126,7 @@ class Planet {
     }
     
     setCoM();
+    setNormals();
   }
   
   // Adds new vertices if the space in between current ones has grown past a certain distance 
@@ -206,7 +208,7 @@ class Planet {
     
     signedArea /= 2;
     
-    //println(signedArea);
+    println(signedArea);
     
     x /= 6 * signedArea;
     y /= 6 * signedArea;
@@ -214,27 +216,56 @@ class Planet {
     com = new PVector(x, y);
   }
   
+  void setNormals() {
+    for(int i = 0; i < vertices.size(); i++) {
+      Vertex vertex = vertices.get(i);
+        
+      Vertex prevV = vertices.get((i > 0) ? i - 1 : vertices.size() - 1);
+      Vertex nextV = vertices.get((i + 1) % vertices.size());
+      
+      PVector a = prevV.getVector().sub(vertex.getVector());
+      PVector b = nextV.getVector().sub(vertex.getVector());
+      
+      
+      float aHeading = a.heading();
+      float bHeading = b.heading();
+      //println("a: " + 180 * aHeading / PI + ", b: " + 180 * bHeading / PI);
+      
+      float angle = ((bHeading > aHeading) ? bHeading : bHeading + 2 * PI) - aHeading;
+      //println(180 * angle / PI);
+      
+      vertex.normal = a.rotate(angle / 2).normalize();
+      
+      //println(vertex.normal);
+    }
+  }
+  
   void round(float threshold, float amount) {
     ArrayList<Vertex> movedVertices = new ArrayList<Vertex>();
     
-    PVector[] dists = new PVector[vertices.size()];
+    float[] dists = new float[vertices.size()];
     
     for(int i = 0; i < vertices.size(); i++) {
       Vertex vertex = vertices.get(i);
       
       PVector dist = com.copy().sub(vertex.getVector());
-      dists[i] = dist;
+      dists[i] = dist.mag();
     }
     
     for(int i = 0; i < vertices.size(); i++) {
       Vertex vertex = vertices.get(i);
       
-      float prevDist = dists[(i > 0) ? i - 1 : vertices.size() - 1].mag();
-      float nextDist = dists[(i + 1) % vertices.size()].mag();
-      float diff = dists[i].mag() - (prevDist + nextDist) / 2;
+      float[] kernel = {0.5, -1, 0.5};
+      float diff = 0;
+      for(int j = 0; j < 3; j++)
+        diff += kernel[j] * dists[(i + j - 1 + vertices.size()) % vertices.size()];
+       
+      //float prevDist = dists[(i > 0) ? i - 1 : vertices.size() - 1];
+      //float nextDist = dists[(i + 1) % vertices.size()];
+      //float diff = (prevDist + nextDist) / 2 - dists[i];
       
       if(abs(diff) > threshold) {
-        PVector displacement = dists[i].copy().setMag(diff * amount);
+        PVector displacement = vertex.normal.copy().setMag(diff * amount);
         moveVertex(vertex, displacement);
         
         //Vertex prevV = vertices.get((i > 0) ? i - 1 : vertices.size() - 1);
@@ -255,9 +286,11 @@ class Planet {
     }
     
     setCoM();
+    setNormals();
   }
   
   void display() {
+    stroke(0);
     fill(100, 100, 50);
     beginShape();
     for(Vertex v : vertices)
@@ -265,12 +298,19 @@ class Planet {
     endShape();
     
     if(showVertices) {
+      // Vertices
       fill(255);
       for(Vertex v : vertices)
         ellipse(width / 2 + v.x, height / 2 + v.y, 5, 5);
+        
       // CoM
       fill(255, 0, 0);
       ellipse(width / 2 + com.x, height / 2 + com.y, 7.5, 7.5);
+      
+      // Normals
+      stroke(255);
+      for(Vertex v : vertices)
+        line(width / 2 + v.x, height / 2 + v.y, width / 2 + v.x + v.normal.x * 10, height / 2 + v.y + v.normal.y * 10);
     }
   }
   

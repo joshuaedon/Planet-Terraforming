@@ -1,13 +1,20 @@
 class Vertex {
   int i;
+  
   float x;
   float y;
+  
+  PVector normal;
+  
   boolean removed;
   
   Vertex(int i, float x, float y) {
     this.i = i;
     this.x = x;
     this.y = y;
+    
+    this.normal = new PVector(0, 0);
+    
     this.removed = false;
   }
   
