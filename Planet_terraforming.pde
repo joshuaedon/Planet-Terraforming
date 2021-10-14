@@ -22,6 +22,7 @@ void draw() {
   if(mouseDown) {
     p.dig(new PVector(mouseX - width / 2, mouseY - height / 2), digAmount);
   }
+  p.round(0, 1);
   
   background(0);
   p.display();

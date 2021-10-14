@@ -4,7 +4,7 @@ class Planet {
   ArrayList<Vertex> vertices;
   ArrayList<ArrayList<ArrayList<Vertex>>> vertexMap;
   
-  PVector centroid;
+  PVector com;
   
   Planet(float radius, int vertexCount) {
     vertices = new ArrayList<Vertex>();
@@ -19,7 +19,7 @@ class Planet {
       addVertexToMap(vertex);
     }
     
-    centroid = new PVector(0, 0);
+    setCoM();
   }
   
   void printVertexMap() {
@@ -107,7 +107,7 @@ class Planet {
         dist.mult((amount - dist.mag()) / dist.mag());
         moveVertex(vertex, dist);
         
-        Vertex prevV = vertices.get((i - 1 + vertices.size()) % vertices.size());
+        Vertex prevV = vertices.get((i > 0) ? i - 1 : vertices.size() - 1);
         Vertex nextV = vertices.get((i + 1) % vertices.size());
         if(checkAddVs(prevV, vertex))
           i++;
@@ -123,6 +123,8 @@ class Planet {
       if(!movedVertex.removed)
         checkRemoveVs(movedVertex);
     }
+    
+    setCoM();
   }
   
   // Adds new vertices if the space in between current ones has grown past a certain distance 
@@ -186,8 +188,73 @@ class Planet {
     return false;
   }
   
-  float getSignedArea() {
-    return 0;
+  void setCoM() {
+    float x = 0;
+    float y = 0;
+    float signedArea = 0;
+    
+    for(int i = 0; i < vertices.size(); i++) {
+      Vertex v1 = vertices.get(i);
+      Vertex v2 = vertices.get((i < vertices.size() - 1) ? i+1 : 0);
+      
+      float a = v1.x * v2.y - v2.x * v1.y;
+      signedArea += a;
+      
+      x += (v1.x + v2.x) * a;
+      y += (v1.y + v2.y) * a;
+    }
+    
+    signedArea /= 2;
+    
+    //println(signedArea);
+    
+    x /= 6 * signedArea;
+    y /= 6 * signedArea;
+    
+    com = new PVector(x, y);
+  }
+  
+  void round(float threshold, float amount) {
+    ArrayList<Vertex> movedVertices = new ArrayList<Vertex>();
+    
+    PVector[] dists = new PVector[vertices.size()];
+    
+    for(int i = 0; i < vertices.size(); i++) {
+      Vertex vertex = vertices.get(i);
+      
+      PVector dist = com.copy().sub(vertex.getVector());
+      dists[i] = dist;
+    }
+    
+    for(int i = 0; i < vertices.size(); i++) {
+      Vertex vertex = vertices.get(i);
+      
+      float prevDist = dists[(i > 0) ? i - 1 : vertices.size() - 1].mag();
+      float nextDist = dists[(i + 1) % vertices.size()].mag();
+      float diff = -((prevDist + nextDist) / 2 - dists[i].mag());
+      
+      if(diff > threshold) {
+        PVector displacement = dists[i].copy().setMag(diff * amount);
+        moveVertex(vertex, displacement);
+        
+        //Vertex prevV = vertices.get((i > 0) ? i - 1 : vertices.size() - 1);
+        //Vertex nextV = vertices.get((i + 1) % vertices.size());
+        //if(checkAddVs(prevV, vertex))
+        //  i++;
+        //if(checkAddVs(vertex, nextV))
+        //  i++;
+          
+        movedVertices.add(vertex);
+      }
+    }
+    
+    // Remove vertices
+    for(Vertex movedVertex : movedVertices) {
+      if(!movedVertex.removed)
+        checkRemoveVs(movedVertex);
+    }
+    
+    //setCoM();
   }
   
   void display() {
@@ -201,6 +268,9 @@ class Planet {
       fill(255);
       for(Vertex v : vertices)
         ellipse(width / 2 + v.x, height / 2 + v.y, 5, 5);
+      // CoM
+      fill(255, 0, 0);
+      ellipse(width / 2 + com.x, height / 2 + com.y, 7.5, 7.5);
     }
   }
   
